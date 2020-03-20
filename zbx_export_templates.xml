@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<zabbix_export>
+    <version>4.4</version>
+    <date>2020-03-20T06:18:01Z</date>
+    <groups>
+        <group>
+            <name>Шаблоны</name>
+        </group>
+    </groups>
+    <templates>
+        <template>
+            <template>Template COVID19 Russia Monitoring</template>
+            <name>Template COVID19 Russia Monitoring</name>
+            <groups>
+                <group>
+                    <name>Шаблоны</name>
+                </group>
+            </groups>
+            <applications>
+                <application>
+                    <name>Raw data</name>
+                </application>
+                <application>
+                    <name>Кол-во вылеченных</name>
+                </application>
+                <application>
+                    <name>Кол-во зараженных</name>
+                </application>
+                <application>
+                    <name>Кол-во смертей</name>
+                </application>
+            </applications>
+            <items>
+                <item>
+                    <name>Статистика по России</name>
+                    <type>HTTP_AGENT</type>
+                    <key>covid19.rawdata</key>
+                    <trends>0</trends>
+                    <value_type>TEXT</value_type>
+                    <applications>
+                        <application>
+                            <name>Raw data</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>return value.replace(/^\s{1,5}.+?(?=\{)/, &quot;&quot;)
+</params>
+                        </step>
+                        <step>
+                            <type>JSONPATH</type>
+                            <params>$.russianSubjects.data.subjects</params>
+                            <error_handler>DISCARD_VALUE</error_handler>
+                        </step>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>var result = new Array();
+var items = JSON.parse(value);
+for (index = 0; index &lt; items.length; index++) {
+    var city = new Object();
+    city['name'] = items[index]['ru']
+    city['alias'] = items[index]['en']
+    city['confirmed'] = items[index]['confirmed']
+    city['deaths'] = items[index]['deaths']
+    city['cured'] = items[index]['cured']
+    result.push(city);
+}
+return JSON.stringify(result);</params>
+                        </step>
+                    </preprocessing>
+                    <url>https://coronavirus-monitor.ru/jquery-lite-9.js</url>
+                </item>
+            </items>
+            <discovery_rules>
+                <discovery_rule>
+                    <name>covid19 russia lld</name>
+                    <type>DEPENDENT</type>
+                    <key>covid19.russia.lld</key>
+                    <delay>0</delay>
+                    <item_prototypes>
+                        <item_prototype>
+                            <name>Кол-во зараженных: {#CITYNAME}</name>
+                            <type>DEPENDENT</type>
+                            <key>covid19.confirmed[{#CITYALIAS}]</key>
+                            <delay>0</delay>
+                            <applications>
+                                <application>
+                                    <name>Кол-во зараженных</name>
+                                </application>
+                            </applications>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>{#CITYNAME}</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.[?(@.alias==&quot;{#CITYALIAS}&quot;)].confirmed</params>
+                                    <error_handler>DISCARD_VALUE</error_handler>
+                                </step>
+                                <step>
+                                    <type>RTRIM</type>
+                                    <params>]</params>
+                                </step>
+                                <step>
+                                    <type>LTRIM</type>
+                                    <params>[</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>covid19.rawdata</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Кол-во вылеченных: {#CITYNAME}</name>
+                            <type>DEPENDENT</type>
+                            <key>covid19.cured[{#CITYALIAS}]</key>
+                            <delay>0</delay>
+                            <applications>
+                                <application>
+                                    <name>Кол-во вылеченных</name>
+                                </application>
+                            </applications>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>{#CITYNAME}</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.[?(@.alias==&quot;{#CITYALIAS}&quot;)].cured</params>
+                                    <error_handler>DISCARD_VALUE</error_handler>
+                                </step>
+                                <step>
+                                    <type>RTRIM</type>
+                                    <params>]</params>
+                                </step>
+                                <step>
+                                    <type>LTRIM</type>
+                                    <params>[</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>covid19.rawdata</key>
+                            </master_item>
+                        </item_prototype>
+                        <item_prototype>
+                            <name>Кол-во смертей: {#CITYNAME}</name>
+                            <type>DEPENDENT</type>
+                            <key>covid19.deaths[{#CITYALIAS}]</key>
+                            <delay>0</delay>
+                            <applications>
+                                <application>
+                                    <name>Кол-во смертей</name>
+                                </application>
+                            </applications>
+                            <application_prototypes>
+                                <application_prototype>
+                                    <name>{#CITYNAME}</name>
+                                </application_prototype>
+                            </application_prototypes>
+                            <preprocessing>
+                                <step>
+                                    <type>JSONPATH</type>
+                                    <params>$.[?(@.alias==&quot;{#CITYALIAS}&quot;)].deaths</params>
+                                    <error_handler>DISCARD_VALUE</error_handler>
+                                </step>
+                                <step>
+                                    <type>RTRIM</type>
+                                    <params>]</params>
+                                </step>
+                                <step>
+                                    <type>LTRIM</type>
+                                    <params>[</params>
+                                </step>
+                            </preprocessing>
+                            <master_item>
+                                <key>covid19.rawdata</key>
+                            </master_item>
+                        </item_prototype>
+                    </item_prototypes>
+                    <master_item>
+                        <key>covid19.rawdata</key>
+                    </master_item>
+                    <lld_macro_paths>
+                        <lld_macro_path>
+                            <lld_macro>{#CITYALIAS}</lld_macro>
+                            <path>$.alias</path>
+                        </lld_macro_path>
+                        <lld_macro_path>
+                            <lld_macro>{#CITYNAME}</lld_macro>
+                            <path>$.name</path>
+                        </lld_macro_path>
+                    </lld_macro_paths>
+                </discovery_rule>
+            </discovery_rules>
+        </template>
+    </templates>
+</zabbix_export>
