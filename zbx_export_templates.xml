@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <zabbix_export>
     <version>4.4</version>
-    <date>2020-03-20T06:18:01Z</date>
+    <date>2020-03-20T14:55:14Z</date>
     <groups>
         <group>
             <name>Шаблоны</name>
@@ -27,6 +27,9 @@
                     <name>Кол-во зараженных</name>
                 </application>
                 <application>
+                    <name>Кол-во зараженных регионов/городов</name>
+                </application>
+                <application>
                     <name>Кол-во смертей</name>
                 </application>
             </applications>
@@ -35,6 +38,8 @@
                     <name>Статистика по России</name>
                     <type>HTTP_AGENT</type>
                     <key>covid19.rawdata</key>
+                    <delay>30m</delay>
+                    <history>1h</history>
                     <trends>0</trends>
                     <value_type>TEXT</value_type>
                     <applications>
@@ -70,6 +75,42 @@ return JSON.stringify(result);</params>
                         </step>
                     </preprocessing>
                     <url>https://coronavirus-monitor.ru/jquery-lite-9.js</url>
+                    <triggers>
+                        <trigger>
+                            <expression>{nodata(1h)}=1</expression>
+                            <name>Нет данных о короновирусе</name>
+                            <priority>HIGH</priority>
+                        </trigger>
+                    </triggers>
+                </item>
+                <item>
+                    <name>Кол-во зараженных регионов/городов</name>
+                    <type>DEPENDENT</type>
+                    <key>covid19.russia.num</key>
+                    <delay>0</delay>
+                    <applications>
+                        <application>
+                            <name>Кол-во зараженных регионов/городов</name>
+                        </application>
+                    </applications>
+                    <preprocessing>
+                        <step>
+                            <type>JAVASCRIPT</type>
+                            <params>var items = JSON.parse(value);
+return items.length;</params>
+                        </step>
+                    </preprocessing>
+                    <master_item>
+                        <key>covid19.rawdata</key>
+                    </master_item>
+                    <triggers>
+                        <trigger>
+                            <expression>{last(#2)}&gt;=0 and {last()}&gt;=0 and {delta(#2)}&gt;0</expression>
+                            <name>Кол-во зараженных регионов/городов увеличилось</name>
+                            <opdata>{ITEM.VALUE2}</opdata>
+                            <priority>HIGH</priority>
+                        </trigger>
+                    </triggers>
                 </item>
             </items>
             <discovery_rules>
@@ -112,6 +153,14 @@ return JSON.stringify(result);</params>
                             <master_item>
                                 <key>covid19.rawdata</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{last(#2)}&gt;=0 and {last()}&gt;=0 and {delta(#2)}&gt;0</expression>
+                                    <name>Кол-во зараженных увеличилось: {#CITYNAME}</name>
+                                    <opdata>{ITEM.VALUE2}</opdata>
+                                    <priority>HIGH</priority>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>Кол-во вылеченных: {#CITYNAME}</name>
@@ -146,6 +195,14 @@ return JSON.stringify(result);</params>
                             <master_item>
                                 <key>covid19.rawdata</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{last(#2)}&gt;=0 and {last()}&gt;=0 and {delta(#2)}&gt;0</expression>
+                                    <name>Кол-во зараженных увеличилось: {#CITYNAME}</name>
+                                    <opdata>{ITEM.VALUE2}</opdata>
+                                    <priority>HIGH</priority>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                         <item_prototype>
                             <name>Кол-во смертей: {#CITYNAME}</name>
@@ -180,6 +237,14 @@ return JSON.stringify(result);</params>
                             <master_item>
                                 <key>covid19.rawdata</key>
                             </master_item>
+                            <trigger_prototypes>
+                                <trigger_prototype>
+                                    <expression>{last(#2)}&gt;=0 and {last()}&gt;=0 and {delta(#2)}&gt;0</expression>
+                                    <name>Кол-во смертей увеличилось: {#CITYNAME}</name>
+                                    <opdata>{ITEM.VALUE2}</opdata>
+                                    <priority>HIGH</priority>
+                                </trigger_prototype>
+                            </trigger_prototypes>
                         </item_prototype>
                     </item_prototypes>
                     <master_item>
